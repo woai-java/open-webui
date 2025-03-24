@@ -112,6 +112,7 @@
 	{/if}
 </div> -->
 
+<!-- 将提示词从原来的纵向排列改成横向排列,每行有三个 -->
 <div class="h-60 overflow-auto scrollbar-none {className}">
 	{#if filteredPrompts.length > 0}
 	  <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
