@@ -77,7 +77,7 @@
 		</div>
 	{/if}
 </div>
-
+<!-- 
 <div class="h-40 overflow-auto scrollbar-none {className} items-start">
 	{#if filteredPrompts.length > 0}
 		{#each filteredPrompts as prompt, idx (prompt.id || prompt.content)}
@@ -110,7 +110,43 @@
 			</button>
 		{/each}
 	{/if}
-</div>
+</div> -->
+
+<div class="h-60 overflow-auto scrollbar-none {className}">
+	{#if filteredPrompts.length > 0}
+	  <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+		{#each filteredPrompts as prompt, idx (prompt.id || prompt.content)}
+		  <button
+			class="waterfall flex flex-col flex-1 justify-between
+				   px-3 py-2 rounded-xl bg-transparent hover:bg-black/5
+				   dark:hover:bg-white/5 transition group min-w-0"
+			style="animation-delay: {Math.floor(idx/3) * 60}ms"
+			on:click={() => dispatch('select', prompt.content)}
+		  >
+			<div class="flex flex-col text-left min-w-0">
+			  {#if prompt.title && prompt.title[0] !== ''}
+				<div class="font-medium dark:text-gray-300 dark:group-hover:text-gray-200 
+						   transition line-clamp-1">
+				  {prompt.title[0]}
+				</div>
+				<div class="text-xs text-gray-500 font-normal line-clamp-1">
+				  {prompt.title[1]}
+				</div>
+			  {:else}
+				<div class="font-medium dark:text-gray-300 dark:group-hover:text-gray-200 
+						   transition line-clamp-1">
+				  {prompt.content}
+				</div>
+				<div class="text-xs text-gray-500 font-normal line-clamp-1">
+				  {$i18n.t('Prompt')}
+				</div>
+			  {/if}
+			</div>
+		  </button>
+		{/each}
+	  </div>
+	{/if}
+  </div>
 
 <style>
 	/* Waterfall animation for the suggestions */
