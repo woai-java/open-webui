@@ -26,6 +26,8 @@ ARG BUILD_HASH
 
 WORKDIR /app
 
+#RUN npm config set registry https://registry.npmmirror.com
+
 COPY package.json package-lock.json ./
 RUN npm ci
 
@@ -129,8 +131,27 @@ RUN if [ "$USE_OLLAMA" = "true" ]; then \
     rm -rf /var/lib/apt/lists/*; \
     fi
 
+# 替换debian的国内源 libxinerama1 libx11-6 libssl3 libreoffice-headless libreoffice-common
+RUN mkdir -p /etc/apt/sources.list.d \
+    && echo > /etc/apt/sources.list.d/debian.sources \
+    && echo "Types: deb" >> /etc/apt/sources.list.d/debian.sources \
+    && echo "URIs: https://mirrors.tuna.tsinghua.edu.cn/debian/" >> /etc/apt/sources.list.d/debian.sources \
+    && echo "Suites: bookworm bookworm-updates bookworm-backports" >> /etc/apt/sources.list.d/debian.sources \
+    && echo "Components: main contrib non-free non-free-firmware" >> /etc/apt/sources.list.d/debian.sources \
+    && echo "Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg" >> /etc/apt/sources.list.d/debian.sources
+
+# 安装系统依赖和LibreOffice Headless
+RUN apt-get update && apt-get install -y --no-install-recommends libreoffice
+    #apt-transport-https \
+    #ca-certificates \
+    #libreoffice-headless \
+    #libreoffice-common 
+
+
 # install python dependencies
 COPY --chown=$UID:$GID ./backend/requirements.txt ./requirements.txt
+
+RUN pip3 config set global.index-url https://mirrors.aliyun.com/pypi/simple/
 
 RUN pip3 install uv && \
     if [ "$USE_CUDA" = "true" ]; then \
@@ -149,7 +170,7 @@ RUN pip3 install uv && \
     fi; \
     chown -R $UID:$GID /app/backend/data/
 
-
+RUN python -c "import nltk; nltk.download('punkt_tab'); nltk.download('averaged_perceptron_tagger_end') ;"
 
 # copy embedding weight from build
 # RUN mkdir -p /root/.cache/chroma/onnx_models/all-MiniLM-L6-v2
