@@ -58,6 +58,7 @@
 	import ChannelItem from './Sidebar/ChannelItem.svelte';
 	import PencilSquare from '../icons/PencilSquare.svelte';
 	import Home from '../icons/Home.svelte';
+	import { t } from 'i18next';
 
 	const BREAKPOINT = 768;
 
@@ -363,7 +364,9 @@
 			}
 		});
 
-		showSidebar.set(!$mobile ? localStorage.sidebar === 'true' : false);
+		// showSidebar.set(!$mobile ? localStorage.sidebar === 'true' : false);
+		showSidebar.set(!$mobile ? true : false); // 如果是桌面端第一次打开就展示侧边栏
+
 		showSidebar.subscribe((value) => {
 			localStorage.sidebar = value;
 
