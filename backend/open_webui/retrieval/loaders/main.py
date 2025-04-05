@@ -18,6 +18,7 @@ from langchain_community.document_loaders import (
     UnstructuredRSTLoader,
     UnstructuredXMLLoader,
     YoutubeLoader,
+    UnstructuredFileLoader
 )
 from langchain_core.documents import Document
 from open_webui.env import SRC_LOG_LEVELS, GLOBAL_LOG_LEVEL
@@ -187,6 +188,8 @@ class Loader:
                 loader = TextLoader(file_path, autodetect_encoding=True)
             elif file_content_type == "application/epub+zip":
                 loader = UnstructuredEPubLoader(file_path)
+            elif file_ext == "doc":
+                loader = UnstructuredFileLoader(file_path)
             elif (
                 file_content_type
                 == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
