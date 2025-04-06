@@ -57,7 +57,7 @@ ENV ENV=prod \
     USE_EMBEDDING_MODEL_DOCKER=${USE_EMBEDDING_MODEL} \
     USE_RERANKING_MODEL_DOCKER=${USE_RERANKING_MODEL}
 
-
+# 禁用外部连接
 ENV ENABLE_OLLAMA_API=false \
     ENABLE_OPENAI_API=false
     
@@ -135,7 +135,7 @@ RUN if [ "$USE_OLLAMA" = "true" ]; then \
     rm -rf /var/lib/apt/lists/*; \
     fi
 
-# 替换debian的国内源 libxinerama1 libx11-6 libssl3 libreoffice-headless libreoffice-common
+# 替换debian的国内源
 RUN mkdir -p /etc/apt/sources.list.d \
     && echo > /etc/apt/sources.list.d/debian.sources \
     && echo "Types: deb" >> /etc/apt/sources.list.d/debian.sources \
@@ -150,31 +150,40 @@ RUN mkdir -p /etc/apt/sources.list.d \
 # install python dependencies
 COPY --chown=$UID:$GID ./backend/requirements.txt ./requirements.txt
 
+# RUN pip3 install --no-cache-dir uv && \
+#     if [ "$USE_CUDA" = "true" ]; then \
+#     # If you use CUDA the whisper and embedding model will be downloaded on first use
+#     pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/$USE_CUDA_DOCKER_VER --no-cache-dir && \
+#     uv pip install --system -r requirements.txt --no-cache-dir && \
+#     python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
+#     python -c "import os; from faster_whisper import WhisperModel; WhisperModel(os.environ['WHISPER_MODEL'], device='cpu', compute_type='int8', download_root=os.environ['WHISPER_MODEL_DIR'])"; \
+#     python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])"; \
+#     else \
+#     pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu --no-cache-dir && \
+#     uv pip install --system -r requirements.txt --no-cache-dir && \
+#     python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
+#     python -c "import os; from faster_whisper import WhisperModel; WhisperModel(os.environ['WHISPER_MODEL'], device='cpu', compute_type='int8', download_root=os.environ['WHISPER_MODEL_DIR'])"; \
+#     python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])"; \
+#     fi; \
+#     chown -R $UID:$GID /app/backend/data/
+
+
 
 # 在 Dockerfile 中设置环境变量
 ENV HF_ENDPOINT=https://hf-mirror.com
 ENV HF_HUB_ENABLE_HF_TRANSFER=1
 
-#RUN pip3 config set global.index-url https://mirrors.aliyun.com/pypi/simple/
-RUN pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
+RUN mkdir -p /app/backend/data/ && chown -R $UID:$GID /app/backend/data/ && \
+    pip3 config set global.index-url https://mirrors.aliyun.com/pypi/simple && \
     pip3 install uv && \
     if [ "$USE_CUDA" = "true" ]; then \
-    # If you use CUDA the whisper and embedding model will be downloaded on first use
-    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/$USE_CUDA_DOCKER_VER --no-cache-dir && \
-    uv pip install --system -r requirements.txt --no-cache-dir --index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
-    python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
-    python -c "import os; from faster_whisper import WhisperModel; WhisperModel(os.environ['WHISPER_MODEL'], device='cpu', compute_type='int8', download_root=os.environ['WHISPER_MODEL_DIR'])"; \
-    python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])"; \
+        pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/$USE_CUDA_DOCKER_VER --no-cache-dir && \
+        uv pip install --system -r requirements.txt --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple; \
     else \
-    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu --no-cache-dir && \
-    uv pip install --system -r requirements.txt --no-cache-dir --index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
-    python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
-    python -c "import os; from faster_whisper import WhisperModel; WhisperModel(os.environ['WHISPER_MODEL'], device='cpu', compute_type='int8', download_root=os.environ['WHISPER_MODEL_DIR'])"; \
-    python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])"; \
-    fi; \
-    chown -R $UID:$GID /app/backend/data/
-
-#RUN python -c "import nltk; nltk.download('punkt_tab'); nltk.download('averaged_perceptron_tagger_end') ;"
+        pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu --no-cache-dir && \
+        uv pip install --system -r requirements.txt --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple; \
+    fi
+    
 
 # copy embedding weight from build
 # RUN mkdir -p /root/.cache/chroma/onnx_models/all-MiniLM-L6-v2
