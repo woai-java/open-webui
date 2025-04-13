@@ -32,8 +32,12 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
+
+#COPY hosts /tmp/hosts
+
 ENV APP_BUILD_HASH=${BUILD_HASH}
 RUN npm run build
+#RUN cat /tmp/hosts >> /etc/hosts && rm /tmp/hosts && npm run build
 
 ######## WebUI backend ########
 FROM python:3.11-slim-bookworm AS base
@@ -136,15 +140,20 @@ RUN if [ "$USE_OLLAMA" = "true" ]; then \
     fi
 
 # 替换debian的国内源
-RUN mkdir -p /etc/apt/sources.list.d \
-    && echo > /etc/apt/sources.list.d/debian.sources \
-    && echo "Types: deb" >> /etc/apt/sources.list.d/debian.sources \
-    && echo "URIs: https://mirrors.tuna.tsinghua.edu.cn/debian/" >> /etc/apt/sources.list.d/debian.sources \
-    && echo "Suites: bookworm bookworm-updates bookworm-backports" >> /etc/apt/sources.list.d/debian.sources \
-    && echo "Components: main contrib non-free non-free-firmware" >> /etc/apt/sources.list.d/debian.sources \
-    && echo "Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg" >> /etc/apt/sources.list.d/debian.sources \
+# RUN mkdir -p /etc/apt/sources.list.d \
+#     && echo > /etc/apt/sources.list.d/debian.sources \
+#     && echo "Types: deb" >> /etc/apt/sources.list.d/debian.sources \
+#     && echo "URIs: https://mirrors.tuna.tsinghua.edu.cn/debian/" >> /etc/apt/sources.list.d/debian.sources \
+#     && echo "Suites: bookworm bookworm-updates bookworm-backports" >> /etc/apt/sources.list.d/debian.sources \
+#     && echo "Components: main contrib non-free non-free-firmware" >> /etc/apt/sources.list.d/debian.sources \
+#     && echo "Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg" >> /etc/apt/sources.list.d/debian.sources \
+
+RUN echo "deb https://mirrors.aliyun.com/debian/ bookworm main non-free non-free-firmware contrib" > /etc/apt/sources.list && \
+    echo "deb https://mirrors.aliyun.com/debian-security/ bookworm-security main non-free non-free-firmware contrib" >> /etc/apt/sources.list && \
+    echo "deb https://mirrors.aliyun.com/debian/ bookworm-updates main non-free non-free-firmware contrib" >> /etc/apt/sources.list && \
+    echo "deb https://mirrors.aliyun.com/debian/ bookworm-backports main non-free non-free-firmware contrib" >> /etc/apt/sources.list && \
     # 安装系统依赖和libreoffice
-    && apt-get update && apt-get install -y --no-install-recommends  libreoffice-writer-nogui
+    apt-get update && apt-get install -y --no-install-recommends  libreoffice-writer-nogui
 
 
 # install python dependencies
@@ -171,19 +180,25 @@ COPY --chown=$UID:$GID ./backend/requirements.txt ./requirements.txt
 
 # 在 Dockerfile 中设置环境变量
 ENV HF_ENDPOINT=https://hf-mirror.com
-ENV HF_HUB_ENABLE_HF_TRANSFER=1
+# ENV HF_HUB_ENABLE_HF_TRANSFER=1
 
 RUN mkdir -p /app/backend/data/ && chown -R $UID:$GID /app/backend/data/ && \
     pip3 config set global.index-url https://mirrors.aliyun.com/pypi/simple && \
     pip3 install uv && \
     if [ "$USE_CUDA" = "true" ]; then \
         pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/$USE_CUDA_DOCKER_VER --no-cache-dir && \
-        uv pip install --system -r requirements.txt --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple; \
+        uv pip install --system -r requirements.txt --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple && \
+        python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
+        python -c "import os; from faster_whisper import WhisperModel; WhisperModel(os.environ['WHISPER_MODEL'], device='cpu', compute_type='int8', download_root=os.environ['WHISPER_MODEL_DIR'])"; \
+        python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])"; \
     else \
         pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu --no-cache-dir && \
-        uv pip install --system -r requirements.txt --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple; \
-    fi
-    
+        uv pip install --system -r requirements.txt --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple && \
+        python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
+        python -c "import os; from faster_whisper import WhisperModel; WhisperModel(os.environ['WHISPER_MODEL'], device='cpu', compute_type='int8', download_root=os.environ['WHISPER_MODEL_DIR'])"; \
+        python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])"; \
+    fi; \
+    chown -R $UID:$GID /app/backend/data/
 
 # copy embedding weight from build
 # RUN mkdir -p /root/.cache/chroma/onnx_models/all-MiniLM-L6-v2
@@ -201,7 +216,7 @@ COPY --chown=$UID:$GID ./backend .
 COPY --chown=$UID:$GID ./offline-files/nltk_data /root/nltk_data
 
 # 复制已下载好的模型
-COPY --chown=$UID:$GID ./offline-files/cache/ ./data/cache/
+#COPY --chown=$UID:$GID ./offline-files/cache/ ./data/cache/
 
 EXPOSE 8080
 
