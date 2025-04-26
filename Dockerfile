@@ -159,6 +159,7 @@ RUN echo "deb https://mirrors.aliyun.com/debian/ bookworm main non-free non-free
 # install python dependencies
 COPY --chown=$UID:$GID ./backend/requirements.txt ./requirements.txt
 
+<<<<<<< HEAD
 # RUN pip3 install --no-cache-dir uv && \
 #     if [ "$USE_CUDA" = "true" ]; then \
 #     # If you use CUDA the whisper and embedding model will be downloaded on first use
@@ -185,6 +186,9 @@ ENV HF_ENDPOINT=https://hf-mirror.com
 RUN mkdir -p /app/backend/data/ && chown -R $UID:$GID /app/backend/data/ && \
     pip3 config set global.index-url https://mirrors.aliyun.com/pypi/simple && \
     pip3 install uv && \
+=======
+RUN pip3 install --no-cache-dir uv && \
+>>>>>>> upstream/main
     if [ "$USE_CUDA" = "true" ]; then \
         pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/$USE_CUDA_DOCKER_VER --no-cache-dir && \
         uv pip install --system -r requirements.txt --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple && \
