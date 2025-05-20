@@ -61,9 +61,7 @@ ENV ENV=prod \
     USE_EMBEDDING_MODEL_DOCKER=${USE_EMBEDDING_MODEL} \
     USE_RERANKING_MODEL_DOCKER=${USE_RERANKING_MODEL}
 
-# 禁用外部连接
-ENV ENABLE_OLLAMA_API=false \
-    ENABLE_OPENAI_API=false
+
     
 ## Basis URL Config ##
 ENV OLLAMA_BASE_URL="/ollama" \
@@ -153,30 +151,11 @@ RUN echo "deb https://mirrors.aliyun.com/debian/ bookworm main non-free non-free
     echo "deb https://mirrors.aliyun.com/debian/ bookworm-updates main non-free non-free-firmware contrib" >> /etc/apt/sources.list && \
     echo "deb https://mirrors.aliyun.com/debian/ bookworm-backports main non-free non-free-firmware contrib" >> /etc/apt/sources.list && \
     # 安装系统依赖和libreoffice
-    apt-get update && apt-get install -y --no-install-recommends  libreoffice-writer-nogui
+    apt-get update && apt-get install -y --no-install-recommends  libreoffice-writer-nogui  poppler-utils tesseract-ocr tesseract-ocr-chi-sim tesseract-ocr-chi-tra
 
 
 # install python dependencies
 COPY --chown=$UID:$GID ./backend/requirements.txt ./requirements.txt
-
-<<<<<<< HEAD
-# RUN pip3 install --no-cache-dir uv && \
-#     if [ "$USE_CUDA" = "true" ]; then \
-#     # If you use CUDA the whisper and embedding model will be downloaded on first use
-#     pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/$USE_CUDA_DOCKER_VER --no-cache-dir && \
-#     uv pip install --system -r requirements.txt --no-cache-dir && \
-#     python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
-#     python -c "import os; from faster_whisper import WhisperModel; WhisperModel(os.environ['WHISPER_MODEL'], device='cpu', compute_type='int8', download_root=os.environ['WHISPER_MODEL_DIR'])"; \
-#     python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])"; \
-#     else \
-#     pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu --no-cache-dir && \
-#     uv pip install --system -r requirements.txt --no-cache-dir && \
-#     python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
-#     python -c "import os; from faster_whisper import WhisperModel; WhisperModel(os.environ['WHISPER_MODEL'], device='cpu', compute_type='int8', download_root=os.environ['WHISPER_MODEL_DIR'])"; \
-#     python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])"; \
-#     fi; \
-#     chown -R $UID:$GID /app/backend/data/
-
 
 
 # 在 Dockerfile 中设置环境变量
@@ -186,18 +165,17 @@ ENV HF_ENDPOINT=https://hf-mirror.com
 RUN mkdir -p /app/backend/data/ && chown -R $UID:$GID /app/backend/data/ && \
     pip3 config set global.index-url https://mirrors.aliyun.com/pypi/simple && \
     pip3 install uv && \
-=======
-RUN pip3 install --no-cache-dir uv && \
->>>>>>> upstream/main
     if [ "$USE_CUDA" = "true" ]; then \
         pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/$USE_CUDA_DOCKER_VER --no-cache-dir && \
         uv pip install --system -r requirements.txt --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple && \
+        python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='unstructuredio/yolo_x_layout', local_dir_use_symlinks=False)"  && \
         python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
         python -c "import os; from faster_whisper import WhisperModel; WhisperModel(os.environ['WHISPER_MODEL'], device='cpu', compute_type='int8', download_root=os.environ['WHISPER_MODEL_DIR'])"; \
         python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])"; \
     else \
         pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu --no-cache-dir && \
         uv pip install --system -r requirements.txt --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple && \
+        python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='unstructuredio/yolo_x_layout', local_dir_use_symlinks=False)"  && \
         python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
         python -c "import os; from faster_whisper import WhisperModel; WhisperModel(os.environ['WHISPER_MODEL'], device='cpu', compute_type='int8', download_root=os.environ['WHISPER_MODEL_DIR'])"; \
         python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])"; \
@@ -231,5 +209,9 @@ USER $UID:$GID
 ARG BUILD_HASH
 ENV WEBUI_BUILD_VERSION=${BUILD_HASH}
 ENV DOCKER=true
+
+# 禁用外部连接
+ENV ENABLE_OLLAMA_API=false \
+    OFFLINE_MODE=true
 
 CMD [ "bash", "start.sh"]
