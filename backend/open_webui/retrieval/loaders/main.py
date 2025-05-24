@@ -18,8 +18,11 @@ from langchain_community.document_loaders import (
     UnstructuredRSTLoader,
     UnstructuredXMLLoader,
     YoutubeLoader,
-    UnstructuredFileLoader
+    UnstructuredFileLoader,
+    PyMuPDFLoader,
+    UnstructuredPDFLoader
 )
+
 from langchain_core.documents import Document
 
 from open_webui.retrieval.loaders.mistral import MistralLoader
@@ -243,9 +246,11 @@ class Loader:
             )
         else:
             if file_ext == "pdf":
-                loader = PyPDFLoader(
-                    file_path, extract_images=self.kwargs.get("PDF_EXTRACT_IMAGES")
-                )
+                try:
+                    loader = PyMuPDFLoader(file_path, extract_images=True)
+                    docs = loader.load()
+                except Exception:
+                    loader = UnstructuredPDFLoader(file_path, extract_images=True, strategy="hi_res", languages=["chi_sim", "chi_tra"])
             elif file_ext == "csv":
                 loader = CSVLoader(file_path, autodetect_encoding=True)
             elif file_ext == "rst":
