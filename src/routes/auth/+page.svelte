@@ -28,6 +28,17 @@
 
 	let ldapUsername = '';
 
+	// 注册模式专用逻辑
+	let username = '';
+	// let email = ''; // 最终提交的邮箱
+	
+	function handleUsernameInput() {
+		// 过滤特殊字符
+		username = username.replace(/[@]/g, '');
+		// 自动拼接完整邮箱
+		email = `${username}@zj.com`;
+	}
+
 	const querystringValue = (key) => {
 		const querystring = window.location.search;
 		const urlParams = new URLSearchParams(querystring);
@@ -170,6 +181,26 @@
 	}}
 />
 
+<!-- 统一输入框样式（添加下划线） -->
+<style>
+  /* 全局输入框下划线样式 */
+  [type='text'], 
+  [type='email'], 
+  [type='password'] {
+    border-radius: 0;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid #d1d5db; /* gray-300 */
+    background-color: transparent;
+  }
+  .dark [type='text'],
+  .dark [type='email'],
+  .dark [type='password'] {
+    border-bottom-color: #4b5563; /* gray-600 */
+  }
+</style>
+
 <div class="w-full h-screen max-h-[100dvh] text-white relative">
 	<div class="w-full h-full absolute top-0 left-0 bg-white dark:bg-black"></div>
 
@@ -270,17 +301,42 @@
 											/>
 										</div>
 									{:else}
+									<!-- 邮箱输入部分 -->
 										<div class="mb-2">
-											<div class=" text-sm font-medium text-left mb-1">{$i18n.t('Email')}</div>
-											<input
+											{#if mode === 'signup'}
+												<!-- 注册模式：拆分输入 -->
+												<div class="text-sm font-medium text-left mb-1">
+												{$i18n.t('注册邮箱')}
+												</div>
+												
+												<div class="flex dark:border-gray-600 pb-0.5">
+												<input
+													bind:value={username}
+													type="text"
+													class="flex-1 bg-transparent outline-none"
+													placeholder={$i18n.t('输入您的号')}
+													on:input={handleUsernameInput}
+												/>
+												<div class="flex items-center text-gray-800 dark:text-gray-400 ml-2">
+													@zj.com
+												</div>
+												</div>
+											
+											
+											{:else}
+												<!-- 登录模式：常规输入 -->
+												<div class="text-sm font-medium text-left mb-1">
+												{$i18n.t('登录邮箱')}
+												</div>
+												
+												<input
 												bind:value={email}
 												type="email"
-												class="my-0.5 w-full text-sm outline-hidden bg-transparent"
-												autocomplete="email"
-												name="email"
-												placeholder={$i18n.t('Enter Your Email')}
+												class="w-full bg-transparent border-b dark:border-gray-600 pb-0.5 outline-none"
+												placeholder={$i18n.t('输入完整邮箱地址')}
 												required
-											/>
+												/>
+											{/if}
 										</div>
 									{/if}
 
@@ -341,6 +397,40 @@
 												</button>
 											</div>
 										{/if}
+
+										<div class="mt-4 text-sm text-center flex items-center justify-center space-x-2">
+											<!-- 提示部分 -->
+											<div class="flex items-center text-gray-500 dark:text-gray-400 text-xs font-bold"> <!-- 添加 font-bold -->
+												<span>{$i18n.t('首次使用须知 ')}</span>
+												<svg 
+												xmlns="http://www.w3.org/2000/svg" 
+												class="h-4 w-4 mr-1"
+												viewBox="0 0 20 20" 
+												fill="currentColor"
+												>
+												<path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H3a1 1 0 110-2h9.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+												</svg>
+												
+											</div>
+
+											<!-- 教程链接 -->
+											<a 
+												href="https://your-tutorial-url.com"
+												target="_blank"
+												class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors flex items-center"
+											>
+												<svg 
+												xmlns="http://www.w3.org/2000/svg"
+												class="h-4 w-4 mr-1" 
+												viewBox="0 0 20 20"
+												fill="currentColor"
+												>
+												<path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"/>
+												</svg>
+												<span>{$i18n.t('点击查看详细指南')}</span>
+											</a>
+											</div>
+
 									{/if}
 								{/if}
 							</div>
