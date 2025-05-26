@@ -34,11 +34,8 @@ RUN npm ci
 
 COPY . .
 
-#COPY hosts /tmp/hosts
-
 ENV APP_BUILD_HASH=${BUILD_HASH}
 RUN npm run build
-#RUN cat /tmp/hosts >> /etc/hosts && rm /tmp/hosts && npm run build
 
 ######## WebUI backend ########
 FROM python:3.11-slim-bookworm AS base
@@ -139,14 +136,6 @@ RUN if [ "$USE_OLLAMA" = "true" ]; then \
     fi
 
 # 替换debian的国内源
-# RUN mkdir -p /etc/apt/sources.list.d \
-#     && echo > /etc/apt/sources.list.d/debian.sources \
-#     && echo "Types: deb" >> /etc/apt/sources.list.d/debian.sources \
-#     && echo "URIs: https://mirrors.tuna.tsinghua.edu.cn/debian/" >> /etc/apt/sources.list.d/debian.sources \
-#     && echo "Suites: bookworm bookworm-updates bookworm-backports" >> /etc/apt/sources.list.d/debian.sources \
-#     && echo "Components: main contrib non-free non-free-firmware" >> /etc/apt/sources.list.d/debian.sources \
-#     && echo "Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg" >> /etc/apt/sources.list.d/debian.sources \
-
 RUN echo "deb https://mirrors.aliyun.com/debian/ bookworm main non-free non-free-firmware contrib" > /etc/apt/sources.list && \
     echo "deb https://mirrors.aliyun.com/debian-security/ bookworm-security main non-free non-free-firmware contrib" >> /etc/apt/sources.list && \
     echo "deb https://mirrors.aliyun.com/debian/ bookworm-updates main non-free non-free-firmware contrib" >> /etc/apt/sources.list && \
@@ -159,7 +148,7 @@ RUN echo "deb https://mirrors.aliyun.com/debian/ bookworm main non-free non-free
 COPY --chown=$UID:$GID ./backend/requirements.txt ./requirements.txt
 
 
-# 在 Dockerfile 中设置环境变量
+# 设置huggingface环境变量
 ENV HF_ENDPOINT=https://hf-mirror.com
 # ENV HF_HUB_ENABLE_HF_TRANSFER=1
 
@@ -197,9 +186,6 @@ COPY --chown=$UID:$GID ./backend .
 
 # 复制nltk_data
 COPY --chown=$UID:$GID ./offline-files/nltk_data /root/nltk_data
-
-# 复制已下载好的模型
-#COPY --chown=$UID:$GID ./offline-files/cache/ ./data/cache/
 
 EXPOSE 8080
 
