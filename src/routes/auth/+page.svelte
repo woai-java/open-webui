@@ -30,13 +30,13 @@
 
 	// 注册模式专用逻辑
 	let username = '';
-	// let email = ''; // 最终提交的邮箱
+	let emailSuffix = '@gaj.zjs.gd'; 
 	
 	function handleUsernameInput() {
-		// 过滤特殊字符
-		username = username.replace(/[@]/g, '');
+		// 只保留数字，并截断到6位
+		username = username.replace(/\D/g, '').slice(0, 6);
 		// 自动拼接完整邮箱
-		email = `${username}@zj.com`;
+		email = `${username}${emailSuffix}`;
 	}
 
 	const querystringValue = (key) => {
@@ -309,22 +309,28 @@
 									<!-- 邮箱输入部分 -->
 										<div class="mb-2">
 											{#if mode === 'signup'}
-												<!-- 注册模式：拆分输入 -->
-												<div class="text-sm font-medium text-left mb-1">
-												{$i18n.t('注册邮箱')}
-												</div>
-												
-												<div class="flex dark:border-gray-600 pb-0.5">
-												<input
-													bind:value={username}
-													type="text"
-													class="flex-1 bg-transparent outline-none"
-													placeholder={$i18n.t('输入您的号')}
-													on:input={handleUsernameInput}
-												/>
-												<div class="flex items-center text-gray-800 dark:text-gray-400 ml-2">
-													@zj.com
-												</div>
+												<div class="mb-2">
+													<div class="text-sm font-medium text-left mb-1">
+														{$i18n.t('注册邮箱')}
+														{#if username.length !== 6 && username.length > 0}
+															<span class="text-red-500 text-xs ml-1">({$i18n.t('必须为6位数字警号')})</span>
+														{/if}
+													</div>
+													<div class="flex items-center  dark:border-gray-600 pb-0.5">
+														<input
+															bind:value={username}
+															type="text"
+															inputmode="numeric"
+															pattern="[0-9]*"
+															maxlength="6"
+															class="flex-1 bg-transparent outline-none"
+															placeholder={$i18n.t('请输入6位数字警号')}
+															on:input={handleUsernameInput}
+														/>
+														<div class="text-gray-800 dark:text-gray-400 ml-2">
+															{emailSuffix}
+														</div>
+													</div>
 												</div>
 											
 											
@@ -420,9 +426,9 @@
 												
 											</div>
 
-											<!-- 教程链接 -->
+											<!-- 使用指南链接 -->
 											<a 
-												href="https://your-tutorial-url.com"
+												href="http://68.208.6.141:888/web/#/p/b8f35a98d9556f767dbad19543a0296d"
 												target="_blank"
 												class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors flex items-center"
 											>
@@ -434,7 +440,7 @@
 												>
 												<path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"/>
 												</svg>
-												<span>{$i18n.t('点击查看详细指南')}</span>
+												<span>{$i18n.t('点击查看详细使用指南')}</span>
 											</a>
 											</div>
 
