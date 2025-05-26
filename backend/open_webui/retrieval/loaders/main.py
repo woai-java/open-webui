@@ -2,6 +2,7 @@ import requests
 import logging
 import ftfy
 import sys
+import fitz
 
 from langchain_community.document_loaders import (
     AzureAIDocumentIntelligenceLoader,
@@ -198,6 +199,22 @@ class Loader:
         self.engine = engine
         self.kwargs = kwargs
 
+    def _has_vector_graphics(self, pdf_path):
+        '''
+        判断pdf文件是否存在矢量图
+        '''
+        doc = fitz.open(pdf_path)
+        for page_num in range(len(doc)):
+            page = doc.load_page(page_num)
+            drawings = page.get_drawings()  # 获取所有绘图指令
+            if len(drawings) > 0:
+                doc.close()
+                return True
+        doc.close()
+        return False
+                
+
+
     def load(
         self, filename: str, file_content_type: str, file_path: str
     ) -> list[Document]:
@@ -297,11 +314,10 @@ class Loader:
             )
         else:
             if file_ext == "pdf":
-                try:
+                if not self._has_vector_graphics(file_path):
                     loader = PyMuPDFLoader(file_path, extract_images=True)
-                    docs = loader.load()
-                except Exception:
-                    loader = UnstructuredPDFLoader(file_path, extract_images=True, strategy="hi_res", languages=["chi_sim", "chi_tra"])
+                else:
+                    loader = UnstructuredPDFLoader(file_path, extract_images=True, strategy="hi_res", languages=["chi_sim"])
             elif file_ext == "csv":
                 loader = CSVLoader(file_path, autodetect_encoding=True)
             elif file_ext == "rst":
