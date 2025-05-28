@@ -275,7 +275,7 @@
 									{#if mode === 'signup'}
 										<div class="mb-2">
 											<label for="name" class="text-sm font-medium text-left mb-1 block"
-												>{$i18n.t('姓名')}</label
+												>{$i18n.t('真实姓名')}</label
 											>
 											<input
 												bind:value={name}
@@ -283,7 +283,7 @@
 												id="name"
 												class="my-0.5 w-full text-sm outline-hidden bg-transparent"
 												autocomplete="name"
-												placeholder={$i18n.t('输入您的姓名')}
+												placeholder={$i18n.t('请输入您的姓名')}
 												required
 											/>
 										</div>
@@ -324,7 +324,7 @@
 															pattern="[0-9]*"
 															maxlength="6"
 															class="flex-1 bg-transparent outline-none"
-															placeholder={$i18n.t('输入您的6位数字警号')}
+															placeholder={$i18n.t('请输入您的6位数字警号')}
 															on:input={handleUsernameInput}
 														/>
 														<div class="text-gray-800 dark:text-gray-400 ml-2">
@@ -344,7 +344,7 @@
 												bind:value={email}
 												type="email"
 												class="w-full bg-transparent border-b dark:border-gray-600 pb-0.5 outline-none"
-												placeholder={$i18n.t('输入完整邮箱地址')}
+												placeholder={$i18n.t('请输入您的完整邮箱地址')}
 												required
 												/>
 											{/if}
@@ -360,7 +360,7 @@
 											type="password"
 											id="password"
 											class="my-0.5 w-full text-sm outline-hidden bg-transparent"
-											placeholder={$i18n.t('Enter Your Password')}
+											placeholder={$i18n.t('请输入您的密码')}
 											autocomplete="current-password"
 											name="current-password"
 											required
